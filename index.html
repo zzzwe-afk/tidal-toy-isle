@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>潮玩荒岛 · Tidal Toy Isle</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div id="app">
+  <canvas id="scene"></canvas>
+
+  <!-- 游戏内 HUD -->
+  <div id="hud" class="hidden">
+    <!-- 状态条 -->
+    <div class="panel vitals">
+      <div class="vital-row">
+        <span class="vital-ico">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path d="M12 21C8.5 17.6 2 12.4 2 7.2 2 4.2 4.6 2 7.4 2 9.4 2 11 3.4 12 5c1-1.6 2.6-3 4.6-3 2.8 0 5.4 2.2 5.4 5.2 0 5.2-6.5 10.4-10 13.8z" fill="#f0836b" stroke="#27413e" stroke-width="1.7" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div class="bar"><i id="barHealth"></i></div>
+      </div>
+      <div class="vital-row">
+        <span class="vital-ico">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path d="M13.6 1.5L20 1.5 13.4 9 17.6 9 8 22.5 10.6 12.6 5.2 12.6z" fill="#f3c86d" stroke="#27413e" stroke-width="1.7" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <div class="bar"><i id="barStamina" class="stamina"></i></div>
+      </div>
+      <div class="vital-row">
+        <span class="vital-ico">
+          <svg viewBox="0 0 24 24" width="22" height="22">
+            <path d="M3 12c3.6-5.2 9.6-6.4 13.2-3.4 1.4 1.1 2.3 2.4 2.8 3.4-.5 1-1.4 2.3-2.8 3.4C12.6 18.4 6.6 17.2 3 12z" fill="#6ec3b6" stroke="#27413e" stroke-width="1.7" stroke-linejoin="round"/>
+            <path d="M16.2 8.4L22 5.6c-.2 2.2-.2 4.3 0 6.4l-5.8-3.2z" fill="#6ec3b6" stroke="#27413e" stroke-width="1.7" stroke-linejoin="round"/>
+            <circle cx="8.2" cy="11" r="1.1" fill="#27413e"/>
+          </svg>
+        </span>
+        <div class="bar"><i id="barHunger" class="hunger"></i></div>
+      </div>
+    </div>
+
+    <!-- 时钟 / 天气 / 潮汐 -->
+    <div class="panel clock-card">
+      <div class="clock-line">
+        <span id="clockIcon" class="wico sun"></span>
+        <span id="clockLabel">清晨</span>
+        <span id="dayLabel" class="muted">第 1 天</span>
+      </div>
+      <div class="clock-sub">
+        <span id="weatherLabel">晴朗</span>
+        <span class="sep">·</span>
+        <span id="tideLabel">涨潮中</span>
+        <span id="tideArrow" class="arrow">↑</span>
+      </div>
+    </div>
+
+    <!-- 任务手账 -->
+    <div class="panel quest-card">
+      <div class="quest-head">
+        <span class="tape"></span>
+        <h3>航海手账</h3>
+      </div>
+      <ol id="questList"></ol>
+    </div>
+
+    <!-- 交互提示 -->
+    <div id="prompt" class="prompt hidden"><b>E</b><span id="promptText">采集</span></div>
+
+    <!-- 顶部提示 -->
+    <div id="toasts" class="toasts"></div>
+
+    <!-- 底部快捷栏 -->
+    <div class="bottom-bar">
+      <div class="hint-chip" id="hintChip">
+        <b>WASD</b> 移动 · <b>右键拖动</b> 视角 · <b>E</b> 互动 · <b>左键</b> 攻击 · <b>C</b> 制作 · <b>B</b> 建造
+      </div>
+      <div class="hotbar" id="hotbar"></div>
+    </div>
+
+    <!-- 装备工具 -->
+    <div class="panel equip-card">
+      <span class="equip-label">手持</span>
+      <span id="equipIcon" class="equip-icon">—</span>
+      <span id="equipName" class="equip-name">空手</span>
+    </div>
+
+    <!-- 制作面板 -->
+    <div id="craftPanel" class="sheet hidden">
+      <div class="sheet-head">
+        <h2>制作台</h2>
+        <span class="close-hint">按 C / Esc 关闭</span>
+      </div>
+      <div class="sheet-body">
+        <div id="recipeList" class="recipe-list"></div>
+        <aside class="craft-note">
+          <h4>材料袋</h4>
+          <div id="craftMats" class="mat-lines"></div>
+          <p class="tiny">靠近工作台或营火时，才能使用对应设施的高级配方。</p>
+        </aside>
+      </div>
+    </div>
+
+    <!-- 建造面板 -->
+    <div id="buildPanel" class="sheet hidden">
+      <div class="sheet-head">
+        <h2>营地建造</h2>
+        <span class="close-hint">选一项后左键放置 · Esc 取消</span>
+      </div>
+      <div id="buildList" class="build-list"></div>
+    </div>
+
+    <!-- 死亡界面 -->
+    <div id="deadOverlay" class="overlay hidden">
+      <div class="paper-card">
+        <h1>潮水把你推回了营地</h1>
+        <p id="deadText">你遗落了一些材料，它们还在倒下的地方。</p>
+        <button id="respawnBtn" class="btn">在营火旁醒来</button>
+      </div>
+    </div>
+
+    <!-- 胜利界面 -->
+    <div id="victoryOverlay" class="overlay hidden">
+      <div class="paper-card big">
+        <div class="victory-mark"></div>
+        <h1>潮汐罗盘 · 第一片</h1>
+        <p>你在椰铃林的高处找到了刻着旧航路的罗盘碎片。<br>雾钟岛的灯塔在远处亮了一下，像是在回应你。</p>
+        <div id="victoryStats" class="victory-stats"></div>
+        <div class="victory-btns">
+          <button id="continueBtn" class="btn">继续自由探索</button>
+          <button id="restartBtn" class="btn ghost">新的漂流</button>
+        </div>
+        <p class="tiny">可玩原型到此结束 · 后续海域等待制作</p>
+      </div>
+    </div>
+
+    <!-- 水下滤镜 -->
+    <div id="underwater" class="hidden"></div>
+    <div id="vignette"></div>
+  </div>
+
+  <!-- 开场 -->
+  <div id="startScreen" class="overlay">
+    <div class="start-wrap">
+      <div class="logo-lockup">
+        <h1 class="game-logo">潮玩荒岛</h1>
+        <p class="eng">TIDAL TOY ISLE</p>
+      </div>
+      <p class="start-copy">潮水退去时，沙滩上留下了你的小船和半袋材料。<br>把营地搭起来，修好船，去看看海上还有什么。</p>
+      <div class="start-actions">
+        <button id="newGameBtn" class="btn big-btn">开始漂流</button>
+        <button id="continueGameBtn" class="btn ghost big-btn hidden">继续上次的岛</button>
+      </div>
+      <ul class="start-tips">
+        <li><span>①</span> 捡木材、石头和纤维</li>
+        <li><span>②</span> 建营火与工作台</li>
+        <li><span>③</span> 修好小船出海</li>
+      </ul>
+      <p class="credit">可玩原型 · 概念来自《潮玩荒岛》设定集</p>
+    </div>
+  </div>
+
+  <div id="loading" class="loading hidden"><span></span>潮水正在上岸…</div>
+</div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

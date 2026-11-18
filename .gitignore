@@ -1,0 +1,16 @@
+# 打包产物
+*.zip
+
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# 依赖与日志
+node_modules/
+*.log
+
+# 本地工具产物
+.screenshots/
+.trae-html-share-packages/
